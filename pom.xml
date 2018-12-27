@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.ish</groupId>
+  <artifactId>sparkProject</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <name>sparkProject</name>
+  <!-- FIXME change it to the project's website -->
+  <url>http://www.example.com</url>
+
+  <properties>
+      <encoding>UTF-8</encoding>
+      <maven.compiler.source>1.7</maven.compiler.source>
+      <maven.compiler.target>1.7</maven.compiler.target>
+      <hadoop.version>2.6.0</hadoop.version>
+      <spark.scala.version>2.11</spark.scala.version>
+      <spark.version>2.1.0</spark.version>
+      <scala.version>2.12.6</scala.version>
+      <hbase.version>0.98.6-hadoop2</hbase.version>
+      <jackson.version>2.4.3</jackson.version>
+      <alibaba.json.version>1.2.31</alibaba.json.version>
+      <mysql.version>5.1.44</mysql.version>
+  </properties>
+
+  <dependencies>
+
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.11</version>
+          <scope>test</scope>
+      </dependency>
+
+      <!-- Spark Core -->
+      <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-core_${spark.scala.version}</artifactId>
+          <version>${spark.version}</version>
+          <scope>compile</scope>
+      </dependency>
+
+      <!-- Spark SQL -->
+      <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_${spark.scala.version}</artifactId>
+          <version>${spark.version}</version>
+          <scope>compile</scope>
+      </dependency>
+
+      <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-hive_${spark.scala.version}</artifactId>
+          <version>${spark.version}</version>
+          <scope>compile</scope>
+      </dependency>
+
+      <!-- SparkStreaming -->
+      <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-streaming_${spark.scala.version}</artifactId>
+          <version>${spark.version}</version>
+          <scope>compile</scope>
+      </dependency>
+
+      <!-- spark-streaming-kafka -->
+      <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-streaming-kafka_${spark.scala.version}</artifactId>
+          <version>1.6.3</version>
+          <scope>compile</scope>
+      </dependency>
+
+      <!-- Hadoop -->
+      <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client</artifactId>
+          <version>${hadoop.version}</version>
+          <scope>compile</scope>
+      </dependency>
+
+      <!-- HBase -->
+      <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-client</artifactId>
+          <version>${hbase.version}</version>
+          <scope>compile</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-server</artifactId>
+          <version>${hbase.version}</version>
+          <scope>compile</scope>
+      </dependency>
+
+      <!-- alibaba json -->
+      <dependency>
+          <groupId>com.alibaba</groupId>
+          <artifactId>fastjson</artifactId>
+          <version>1.2.31</version>
+      </dependency>
+
+      <!--jackson json:Spark need dependency -->
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+          <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+          <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-annotations</artifactId>
+          <version>${jackson.version}</version>
+      </dependency>
+
+      <!-- MySQL Connector -->
+      <dependency>
+          <groupId>mysql</groupId>
+          <artifactId>mysql-connector-java</artifactId>
+          <version>${mysql.version}</version>
+          <scope>compile</scope>
+      </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+      <plugins>
+        <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
+        <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.0</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.22.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>2.5.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+        </plugin>
+        <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
+        <plugin>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.7.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>
