@@ -62,14 +62,18 @@ public class StringUtils {
 	 */
 	public static String getFieldFromConcatString(String str, 
 			String delimiter, String field) {
-		String[] fields = str.split(delimiter);
-		for(String concatField : fields) {
-			String fieldName = concatField.split("=")[0];
-			String fieldValue = concatField.split("=")[1];
-			if(fieldName.equals(field)) {
-				return fieldValue;
+
+			String[] fields = str.split(delimiter);
+			for(String concatField : fields) {
+				// 这里要添加判断条件('key=value').split("="),如果value为空的情况,split之后数组长度就是1,会报下标越界exception
+				if (concatField.split("=").length == 2){
+					String fieldName = concatField.split("=")[0];
+					String fieldValue = concatField.split("=")[1];
+					if(fieldName.equals(field)) {
+						return fieldValue;
+					}
+				}
 			}
-		}
 		return null;
 	}
 	

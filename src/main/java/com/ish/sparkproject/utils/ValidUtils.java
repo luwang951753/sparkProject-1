@@ -18,6 +18,7 @@ public class ValidUtils {
 	 */
 	public static boolean between(String data, String dataField, 
 			String parameter, String startParamField, String endParamField) {
+
 		String startParamFieldStr = StringUtils.getFieldFromConcatString(
 				parameter, "\\|", startParamField);
 		String endParamFieldStr = StringUtils.getFieldFromConcatString(

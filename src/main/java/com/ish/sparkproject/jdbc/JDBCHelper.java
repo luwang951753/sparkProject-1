@@ -112,7 +112,7 @@ public class JDBCHelper {
 	}
 
 	/**
-	 * 询SQL语句的方法
+	 * 查询SQL语句的方法
 	 * @param sql
 	 * @param params
 	 * @param callback

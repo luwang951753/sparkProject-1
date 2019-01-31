@@ -1,4 +1,4 @@
-package com.ish.sparkproject.jdbcTest;
+package com.ish.sparkproject.test;
 
 import java.sql.*;
 

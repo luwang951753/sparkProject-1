@@ -69,9 +69,9 @@ public class ConfigurationManager {
 	}
 
 	/**
-	 * 获取K-V的value后进行int转型
-	 * @param key
-	 * @return value
+	 * 获取K-V的value后,进行int转型
+	 * @param key String
+	 * @return value int
 	 */
 	public static Integer getInteger(String key) {
 		String value = getProperty(key);
@@ -82,4 +82,22 @@ public class ConfigurationManager {
 		}
 		return 0;
 	}
+
+	/**
+	 * 获取K-V的value后,进行boolean转型
+	 * @param key String
+	 * @return value boolean
+	 */
+	public static boolean getBoolean(String key){
+		String value = getProperty(key);
+		try {
+			return Boolean.valueOf(value);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+
+
 }
