@@ -8,8 +8,6 @@ import com.ish.sparkproject.dao.ITaskDAO;
 import com.ish.sparkproject.dao.ITop10CategoryDAO;
 import com.ish.sparkproject.dao.factory.DAOFactory;
 import com.ish.sparkproject.domain.*;
-import com.ish.sparkproject.spark.session.CategorySortKey;
-import com.ish.sparkproject.spark.session.SessionAggrStatAccumulator;
 import com.ish.sparkproject.test.MockData;
 import com.ish.sparkproject.utils.*;
 import org.apache.spark.api.java.JavaPairRDD;

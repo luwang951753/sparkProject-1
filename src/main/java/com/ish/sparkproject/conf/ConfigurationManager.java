@@ -28,8 +28,8 @@ public class ConfigurationManager {
 	static {
 		try {
 			// 通过一个“类名.class”的方式，就可以获取到这个类在JVM中对应的Class对象
-			// 然后再通过这个Class对象的getClassLoader()方法，就可以获取到当初加载这个类的JVM
-			// 中的类加载器（ClassLoader），然后调用ClassLoader的getResourceAsStream()这个方法
+			// 然后再通过这个Class对象的getClassLoader()方法，就可以获取到当初加载这个类的JVM中的类加载器（ClassLoader），
+			// 然后调用ClassLoader的getResourceAsStream()这个方法
 			// 就可以用类加载器，去加载类加载路径中的指定的文件
 			// 最终可以获取到一个，针对指定文件的输入流（InputStream）
 			InputStream in = ConfigurationManager.class.getClassLoader()
