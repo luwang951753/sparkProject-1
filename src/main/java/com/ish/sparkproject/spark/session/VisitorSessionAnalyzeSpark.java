@@ -10,13 +10,16 @@ import com.ish.sparkproject.dao.factory.DAOFactory;
 import com.ish.sparkproject.domain.*;
 import com.ish.sparkproject.test.MockData;
 import com.ish.sparkproject.utils.*;
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.Optional;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.storage.StorageLevel;
 import scala.Tuple2;
 
 import java.util.*;
@@ -44,9 +47,14 @@ public class VisitorSessionAnalyzeSpark {
 	public static void main(String[] args) {
 		args = new String[]{"1"};
 		// 构建Spark的上下文
+		SparkConf conf = new SparkConf()
+				.setMaster("local[2]")
+				.setAppName(Constants.SPARK_APP_NAME)
+				.set("spark.serializer","org.apache.spark.serializer.KryoSerializer")
+				.registerKryoClasses(new Class[]{CategorySortKey.class});
+
 		SparkSession sparkSession = SparkSession.builder()
-				.appName(Constants.SPARK_APP_NAME)
-				.master("local[2]")
+				.config(conf)
 				.getOrCreate();
 
 		// 实例化自定义的计数器SessionAggrStatAccumulator
@@ -82,21 +90,30 @@ public class VisitorSessionAnalyzeSpark {
 		 * */
 		JavaRDD<Row> actionRDD = getActionRDDByDateRange(sparkSession, taskParam);
 
-		JavaPairRDD<String, Row> sessionid2Row = getSessionid2ActionRDD(actionRDD);
+		JavaPairRDD<String, Row> sessionid2ActionRDD = getSessionid2ActionRDD(actionRDD);
+		// 持久化RDD,级别为:内存序列化存储
+		sessionid2ActionRDD = sessionid2ActionRDD.persist(StorageLevel.MEMORY_ONLY_SER());
 
 		JavaPairRDD<String, String> sessionid2FullAggrInfoRDD =
-				aggregateBySessonid(sparkSession, actionRDD);
+				aggregateBySessonid(sparkSession, sessionid2ActionRDD);
 
 		JavaPairRDD<String, String> filteredSessionid2AggrInfoRDD =
 				filterSessionAndAggrStat(sessionid2FullAggrInfoRDD, taskParam, sessionAggrStatAccumulator);
-		for (Tuple2 tuple:filteredSessionid2AggrInfoRDD.take(20)) {
-			System.out.println(tuple._2);
-		}
+		filteredSessionid2AggrInfoRDD =
+				filteredSessionid2AggrInfoRDD.persist(StorageLevel.MEMORY_ONLY_SER());
+//		for (Tuple2 tuple:filteredSessionid2AggrInfoRDD.take(20)) {
+//			System.out.println(tuple._2);
+//		}
 
 		JavaPairRDD<String, Row> sessionid2DetailRDD =
-				getSessionid2DetailRDD(filteredSessionid2AggrInfoRDD, sessionid2Row);
+				getSessionid2DetailRDD(filteredSessionid2AggrInfoRDD, sessionid2ActionRDD);
+		sessionid2DetailRDD = sessionid2DetailRDD.persist(StorageLevel.MEMORY_ONLY_SER());
 
-		randomExtractSession(task.getTaskid(), filteredSessionid2AggrInfoRDD, sessionid2Row);
+		randomExtractSession(
+				sparkSession,
+				task.getTaskid(),
+				filteredSessionid2AggrInfoRDD,
+				sessionid2DetailRDD);
 
 		calculateAndPersistAggrStat(sessionAggrStatAccumulator.value(), task.getTaskid());
 
@@ -151,23 +168,17 @@ public class VisitorSessionAnalyzeSpark {
 
 	/**
 	 * 将按日期筛出的行为数据以sessionid进行分组聚合
-	 * @param actionRDD
+	 * @param sparkSession
+	 * @param sessionid2ActionRDD
 	 * @return
 	 */
 	private static JavaPairRDD<String, String> aggregateBySessonid(
-			SparkSession sparkSession, JavaRDD<Row> actionRDD){
-
-		// 现在actionDF中的元素是Row，一个Row就是一行用户访问行为记录，比如一次点击或者搜索
-		// 我们现在需要将这个Row映射成<sessionid,Row>的格式
-		JavaPairRDD<String, Row> session2ActionRDD = actionRDD.mapToPair(row->{
-			String sessionid = row.getString(2);
-			return new Tuple2<String, Row>(sessionid, row);
-		});
+			SparkSession sparkSession, JavaPairRDD<String, Row> sessionid2ActionRDD){
 
 		// 按照相同sessonid分组
 		JavaPairRDD<String, Iterable<Row>> session2ActionsRDD =
-				session2ActionRDD.groupByKey();
-		System.out.println(session2ActionRDD.count());
+				sessionid2ActionRDD.groupByKey();
+//		System.out.println(sessionid2ActionRDD.count());
 
 		// 对每一个session分组进行聚合，将session中所有的搜索词和点击品类都聚合起来
 		// 到此为止，获取的数据格式，如下：<userid,partAggrInfo(sessionid,searchKeywords,clickCategoryIds)>
@@ -465,12 +476,13 @@ public class VisitorSessionAnalyzeSpark {
 	 * @param filteredSessionid2AggrInfoRDD
 	 */
 	private static void randomExtractSession(
+			SparkSession sparkSession,
 			long taskid,
 			JavaPairRDD<String, String> filteredSessionid2AggrInfoRDD,
-			JavaPairRDD<String, Row> sessionid2Row){
+			JavaPairRDD<String, Row> sessionid2DetailRDD){
 
 		// 计算出每天每小时yyyy-MM-dd_HH的session数量 <yyyy-MM-dd_HH, partAggrInfo>
-		JavaPairRDD<String, String> time2SessinidRDD = filteredSessionid2AggrInfoRDD.mapToPair(tuple-> {
+		JavaPairRDD<String, String> time2SessionidRDD = filteredSessionid2AggrInfoRDD.mapToPair(tuple-> {
 			String partAggrInfo = tuple._2;
 			String startTime = StringUtils.getFieldFromConcatString(
 					partAggrInfo, "\\|", Constants.FIELD_START_TIME);
@@ -479,7 +491,7 @@ public class VisitorSessionAnalyzeSpark {
 		});
 
 		// 按照session的时间进行聚合得到每个时间段的session数量
-		Map<String, Long> hourCountMap = time2SessinidRDD.countByKey();
+		Map<String, Long> hourCountMap = time2SessionidRDD.countByKey();
 
 		// 将<yyyy-MM-dd_HH,count>转换为格式<yyyy-MM-dd,<HH,count>>
 		Map<String,Map<String, Long>> dayHourCountMap =
@@ -553,12 +565,17 @@ public class VisitorSessionAnalyzeSpark {
 				}
 			}
 		}
+
+		JavaSparkContext jsc = JavaSparkContext.fromSparkContext(sparkSession.sparkContext());
+		final Broadcast<Map<String, Map<String, List<Integer>>>> dateHourExtractMapBroadcast =
+				jsc.broadcast(dateHourExtractMap);
+
 		/*
 		* 遍历每天每小时的session,根据随机索引进行抽取
 		* 并将符合随机筛选条件的记录写入session_random_extract表中
 		* */
 		// <yyyy-MM-dd_HH, Iterable<partAggrInfo>>
-		JavaPairRDD<String, Iterable<String>> time2sessionidsRDD = time2SessinidRDD.groupByKey();
+		JavaPairRDD<String, Iterable<String>> time2sessionidsRDD = time2SessionidRDD.groupByKey();
 
 		JavaPairRDD<String, String> extractSessionidsRDD = time2sessionidsRDD.flatMapToPair(tuple->{
 			List<Tuple2<String, String>> extractSessionids = new ArrayList<>();
@@ -567,7 +584,8 @@ public class VisitorSessionAnalyzeSpark {
 			String hour = dateHour.split("_")[1];
 			Iterator<String> iterator = tuple._2.iterator();
 
-			List<Integer> extractIndexList = dateHourExtractMap.get(date).get(hour);
+			Map<String, Map<String, List<Integer>>> dateHourExtractMapBroadcastValue = dateHourExtractMapBroadcast.getValue();
+			List<Integer> extractIndexList = dateHourExtractMapBroadcastValue.get(date).get(hour);
 
 			ISessionRandomExtractDAO sessionRandomExtractDAOImpl =
 					DAOFactory.getSessionRandomExtractDAOImpl();
@@ -600,9 +618,10 @@ public class VisitorSessionAnalyzeSpark {
 		*     进行join就可以得到extractSessionidsRDD的每个session的明细数据,即extractSessionDetailRDD
 		* */
 		JavaPairRDD<String, Tuple2<String, Row>> extractSessionDetailRDD =
-				extractSessionidsRDD.join(sessionid2Row);
+				extractSessionidsRDD.join(sessionid2DetailRDD);
 
 		SessionDetail sessionDetail = new SessionDetail();
+		ISessionDetailDAO sessionDetailDAOImpl = DAOFactory.getSessionDetailDAOImpl();
 		extractSessionDetailRDD.foreach(tuple->{
 			Row row = tuple._2._2;
 			sessionDetail.setTaskid(taskid);
@@ -618,7 +637,6 @@ public class VisitorSessionAnalyzeSpark {
 			sessionDetail.setPayCategoryIds(row.getString(10));
 			sessionDetail.setPayProductIds(row.getString(11));
 
-			ISessionDetailDAO sessionDetailDAOImpl = DAOFactory.getSessionDetailDAOImpl();
 			sessionDetailDAOImpl.insert(sessionDetail);
 		});
 
