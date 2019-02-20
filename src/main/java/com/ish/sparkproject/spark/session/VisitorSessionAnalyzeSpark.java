@@ -45,7 +45,6 @@ import java.util.*;
  */
 public class VisitorSessionAnalyzeSpark {
 	public static void main(String[] args) {
-		args = new String[]{"1"};
 		// 构建Spark的上下文
 		SparkConf conf = new SparkConf()
 				.setMaster("local[2]")
@@ -63,7 +62,7 @@ public class VisitorSessionAnalyzeSpark {
 				sessionAggrStatAccumulator, "sessionAggrStatAccumulator");
 
 		// 生成模拟测试用数据
-		mockData(sparkSession);
+		SparkUtils.mockData(sparkSession);
 
 		/*
 		 * 组件的实例化
@@ -88,9 +87,9 @@ public class VisitorSessionAnalyzeSpark {
 		 *	3. 将上一步筛选出的数据按照具体的taskParams进行条件筛选
 		 *	4. 计算出各个visitLength和stepLength的占比并写入MySQL
 		 * */
-		JavaRDD<Row> actionRDD = getActionRDDByDateRange(sparkSession, taskParam);
+		JavaRDD<Row> actionRDD = SparkUtils.getActionRDDByDateRange(sparkSession, taskParam);
 
-		JavaPairRDD<String, Row> sessionid2ActionRDD = getSessionid2ActionRDD(actionRDD);
+		JavaPairRDD<String, Row> sessionid2ActionRDD = SparkUtils.getSessionid2ActionRDD(actionRDD);
 		// 持久化RDD,级别为:内存序列化存储
 		sessionid2ActionRDD = sessionid2ActionRDD.persist(StorageLevel.MEMORY_ONLY_SER());
 
@@ -129,42 +128,6 @@ public class VisitorSessionAnalyzeSpark {
 
 	// =========================================================================
 
-	/**
-	 * 生成模拟数据的方法
-	 * @param sparkSession
-	 */
-	private static void mockData(SparkSession sparkSession){
-		MockData.mock(sparkSession);
-	}
-
-	/**
-	 * 按照日期范围,筛选出用户访问行为数据
-	 * @param sparkSession
-	 * @param taskParams
-	 * @return
-	 */
-	private static JavaRDD<Row> getActionRDDByDateRange(
-			SparkSession sparkSession, JSONObject taskParams){
-
-		String startDate = ParamUtils.getParam(taskParams, Constants.PARAM_START_DATE);
-		String endDate = ParamUtils.getParam(taskParams, Constants.PARAM_END_DATE);
-		String sql =
-				"select * "
-						+ "from user_visit_action "
-						+ "where date >='" + startDate + "'"
-						+ "and date <='" + endDate + "'";
-		Dataset<Row> actionDF = sparkSession.sql(sql);
-		actionDF.show();
-		return actionDF.javaRDD();
-	}
-
-	private static JavaPairRDD<String, Row> getSessionid2ActionRDD(JavaRDD<Row> actionRDD){
-		JavaPairRDD<String, Row>sessionid2Row = actionRDD.mapToPair(row -> {
-			String sessionid = row.getString(2);
-			return new Tuple2<>(sessionid, row);
-		});
-		return sessionid2Row;
-	}
 
 	/**
 	 * 将按日期筛出的行为数据以sessionid进行分组聚合

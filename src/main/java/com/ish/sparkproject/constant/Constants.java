@@ -1,5 +1,7 @@
 package com.ish.sparkproject.constant;
 
+import kafka.serializer.StringDecoder;
+
 /**
  *	常量接口
  */
@@ -13,12 +15,18 @@ public interface Constants {
 	String JDBC_URL = "jdbc.url";
 	String JDBC_USER = "jdbc.user";
 	String JDBC_PASSWORD = "jdbc.password";
+	String KAFKA_METADATA_BROKER_LIST = "kafka.metadata.broker.list";
+	String KAFKA_TOPICS = "kafka.topics";
 
 	/*
 	 * Spark作业相关的常量
 	 * */
 	String SPARK_APP_NAME = "VisitorSessionAnalyzeSpark";
-
+	String SPARK_APP_NAME_PAGE = "PageOneStepConvertRateSpark";
+	String SPARK_APP_NAME_PRODUCT = "AreaTop3ProductSpark";
+	String SPARK_APP_NAME_AD = "AdClickRealTimeStatSpark";
+	String SPARK_LOCAL_TASKID_SESSION = "spark.local.taskid.session";
+	String SPARK_LOCAL_TASKID_PAGE = "spark.local.taskid.page";
 	/*
 	 * 表字段信息相关常量
 	 * */
@@ -51,6 +59,7 @@ public interface Constants {
 	String PARAM_SEX = "sex";
 	String PARAM_KEY_WORDS = "keywords";
 	String PARAM_CATEGORY_IDS = "catagoryIds";
+	String PARAM_TARGET_PAGE_FLOW = "targetPageFlow";
 
 	String SESSION_COUNT = "session_count";
 	String TIME_PERIOD_1s_3s = "1s_3s";
@@ -69,5 +78,7 @@ public interface Constants {
 	String STEP_PERIOD_10_30 = "10_30";
 	String STEP_PERIOD_30_60 = "30_60";
 	String STEP_PERIOD_60 = "60";
+
+
 
 }

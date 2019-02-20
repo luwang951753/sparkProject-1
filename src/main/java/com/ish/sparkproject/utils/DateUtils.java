@@ -16,6 +16,8 @@ public class DateUtils {
 			new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	public static final SimpleDateFormat DATE_FORMAT = 
 			new SimpleDateFormat("yyyy-MM-dd");
+	public static final SimpleDateFormat DATEKEY_FORMAT =
+			new SimpleDateFormat("yyyyMMdd");
 	
 	/**
 	 * 判断一个时间是否在另一个时间之前
@@ -137,6 +139,29 @@ public class DateUtils {
 	public static Date parseTime(String time){
 		try {
 			return TIME_FORMAT.parse(time);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * yyyyMMdd
+	 * @param date
+	 * @return
+	 */
+	public static String formatDateKey(Date date) {
+		return DATEKEY_FORMAT.format(date);
+	}
+
+	/**
+	 * 格式化日期yyyyMMdd
+	 * @param date
+	 * @return
+	 */
+	public static Date parseDateKey(String date) {
+		try {
+			return DATEKEY_FORMAT.parse(date);
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}

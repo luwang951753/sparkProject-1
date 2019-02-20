@@ -98,6 +98,20 @@ public class ConfigurationManager {
 		return false;
 	}
 
+	/**
+	 * 获取K-V的value后,进行Long转型
+	 * @param key
+	 * @return
+	 */
+	public static Long getLong(String key){
+		String value = getProperty(key);
+		try {
+			return Long.valueOf(value);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		}
+		return 0L;
+	}
 
 
 }

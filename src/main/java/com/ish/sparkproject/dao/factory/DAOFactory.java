@@ -22,7 +22,8 @@ public class DAOFactory {
 	}
 
 	public static ISessionDetailDAO getSessionDetailDAOImpl(){
-		return new SessionDetailDAOImpl(); }
+		return new SessionDetailDAOImpl();
+	}
 
 	public static ITop10CategoryDAO getTop10CategoryImpl(){
 		return new Top10CategoryDAOImpl();
@@ -30,5 +31,25 @@ public class DAOFactory {
 
 	public static ITop10SessionDAO getTop10SessionDAOImpl(){
 		return new Top10SessionDAOImpl();
+	}
+
+	public static IPageSplitConvertRateDAO getPageSplitConvertRateDAOImpl(){
+		return new PageSplitConvertRateImpl();
+	}
+
+	public static IAreaTop3ProductDAO getAreaTop3ProductDAOImpl(){
+		return new AreaTop3ProductDAOImpl();
+	}
+
+	public static IAdUserClickCountDAO getAdUserClickCountDAOImpl(){
+		return new AdUserClickCountDAOImpl();
+	}
+
+	public static IAdBlacklistDAO getAdBlacklistDAOImpl(){
+		return new AdBlacklistDAOImpl();
+	}
+
+	public static IAdStatDAO getAdStatDAPImpl(){
+		return new AdStatDAOImpl();
 	}
 }
